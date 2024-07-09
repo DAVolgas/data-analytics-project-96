@@ -1,29 +1,23 @@
-with vy_ads as (
+with vy_ads_cost as (
     select
-        ad_id,
-        campaign_id,
-        campaign_name,
         campaign_date,
         utm_source,
         utm_medium,
         utm_campaign,
-        utm_content,
-        daily_spent
+        sum(daily_spent) as total_cost
     from vk_ads
+    group by 1, 2, 3, 4
 
     union
 
     select
-        ad_id,
-        campaign_id,
-        campaign_name,
         campaign_date,
         utm_source,
         utm_medium,
         utm_campaign,
-        utm_content,
-        daily_spent
+        sum(daily_spent) as total_cost
     from ya_ads
+    group by 1, 2, 3, 4
 ),
 
 purchases as (
@@ -41,13 +35,13 @@ showcase_total_cost as (
         s.source as utm_source,
         s.medium as utm_medium,
         s.campaign as utm_campaign,
-        count(s.visitor_id) as visitors_count,
-        coalesce(sum(vy.daily_spent), 0) as total_cost,
+        count(distinct s.visitor_id) as visitors_count,
+        coalesce(vy.total_cost, 0) as total_cost,
         count(distinct l.lead_id) as leads_count,
         count(p.lead_id) as purchases_count,
         coalesce(sum(p.amount), 0) as revenue
     from sessions as s
-    left join vy_ads as vy
+    left join vy_ads_cost as vy
         on
             s.source = vy.utm_source
             and s.medium = vy.utm_medium
@@ -58,8 +52,8 @@ showcase_total_cost as (
     left join purchases as p
         on s.visitor_id = p.visitor_id
     where s.medium != 'organic'
-    group by 1, 2, 3, 4
-    order by 9 desc nulls last, 1, 5 desc, 2, 3, 4
+    group by 1, 2, 3, 4, 6
+    order by 9 desc, 1, 5 desc, 2, 3, 4
 ),
 
 last_visit as (
