@@ -7,7 +7,6 @@ with last_paid_visits as (
     group by 1
 )
 
-
 select
     lp.visitor_id,
     lp.last_paid_click_date as visit_date,
@@ -19,12 +18,12 @@ select
     l.amount,
     l.closing_reason,
     l.status_id
-from last_paid_visits as lp
-left join sessions as s
+from sessions as s 
+inner join last_paid_visits as lp
     on
         lp.visitor_id = s.visitor_id
         and lp.last_paid_click_date = s.visit_date
-        and s.medium != 'organic'
 left join leads as l
     on s.visitor_id = l.visitor_id
+where s.medium != 'organic'
 order by 8 desc nulls last, 2, 3, 4, 5;
