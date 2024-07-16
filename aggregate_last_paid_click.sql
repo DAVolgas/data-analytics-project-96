@@ -35,7 +35,7 @@ showcase_total_cost as (
         s.source as utm_source,
         s.medium as utm_medium,
         s.campaign as utm_campaign,
-        count(distinct s.visitor_id) as visitors_count,
+        count(s.visitor_id) as visitors_count,
         coalesce(vy.total_cost, 0) as total_cost,
         count(distinct l.lead_id) as leads_count,
         count(p.lead_id) as purchases_count,
@@ -59,26 +59,19 @@ showcase_total_cost as (
 last_visit as (
     select
         visitor_id,
-        max(date_trunc('day', visit_date)) as last_paid_click_date,
-        source as utm_source,
-        medium as utm_medium,
-        campaign as utm_campaign
+        max(date_trunc('day', visit_date)) as last_paid_click_date
     from sessions
     where medium != 'organic'
-    group by 1, 3, 4, 5
+    group by 1
 )
 
 select distinct
     lv.last_paid_click_date,
-    lv.utm_source,
-    lv.utm_medium,
-    lv.utm_campaign,
+    stc.utm_source,
+    stc.utm_medium,
+    stc.utm_campaign,
     stc.total_cost
-from last_visit as lv
-inner join showcase_total_cost as stc
-    on
-        lv.utm_source = stc.utm_source
-        and lv.utm_medium = stc.utm_medium
-        and lv.utm_campaign = stc.utm_campaign
-        and lv.last_paid_click_date = stc.visit_date
+from showcase_total_cost as stc
+inner join last_visit as lv
+    on lv.last_paid_click_date = stc.visit_date
 order by 5 desc, 1;
