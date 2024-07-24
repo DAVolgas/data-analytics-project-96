@@ -40,7 +40,7 @@ last_visit as (
 
 select
     lv.last_paid_click_date::date as visit_date,
-    count(s.visitor_id) as visitors_count,
+    count(distinct s.visitor_id) as visitors_count,
     s.source as utm_source,
     s.medium as utm_medium,
     s.campaign as utm_campaign,
