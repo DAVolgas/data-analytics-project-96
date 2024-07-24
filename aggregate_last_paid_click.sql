@@ -84,4 +84,3 @@ select
     revenue
 from showcase;
 
-	
