@@ -36,35 +36,52 @@ last_visit as (
     from sessions
     where medium != 'organic'
     group by 1
+),
+
+showcase as (
+    select
+        lv.last_paid_click_date::date as visit_date,
+        s.source as utm_source,
+        s.medium as utm_medium,
+        s.campaign as utm_campaign,
+        vy.total_cost,
+        count(distinct s.visitor_id) as visitors_count,
+        count(distinct l.lead_id) as leads_count,
+        count(p.lead_id) as purchases_count,
+        sum(p.amount) as revenue
+    from last_visit as lv
+    inner join sessions as s
+        on
+            lv.visitor_id = s.visitor_id
+            and lv.last_paid_click_date = s.visit_date
+    left join vy_ads_cost as vy
+        on
+            lv.last_paid_click_date::date = vy.campaign_date
+            and s.source = vy.utm_source
+            and s.medium = vy.utm_medium
+            and s.campaign = vy.utm_campaign
+    left join leads as l
+        on
+            lv.last_paid_click_date <= l.created_at
+            and lv.visitor_id = l.visitor_id
+    left join purchases as p
+        on
+            lv.visitor_id = p.visitor_id
+            and l.lead_id = p.lead_id
+    group by 1, 3, 4, 5, 6
+    order by 9 desc nulls last, 1, 2 desc, 3, 4, 5
 )
 
 select
-    lv.last_paid_click_date::date as visit_date,
-    count(distinct s.visitor_id) as visitors_count,
-    s.source as utm_source,
-    s.medium as utm_medium,
-    s.campaign as utm_campaign,
-    vy.total_cost,
-    count(distinct l.lead_id) as leads_count,
-    count(p.lead_id) as purchases_count,
-    sum(p.amount) as revenue
-from last_visit as lv
-inner join sessions as s
-    on
-        lv.visitor_id = s.visitor_id
-        and lv.last_paid_click_date = s.visit_date
-left join vy_ads_cost as vy
-    on
-        lv.last_paid_click_date::date = vy.campaign_date
-        and s.source = vy.utm_source
-        and s.medium = vy.utm_medium
-        and s.campaign = vy.utm_campaign
-left join leads as l
-    on
-        lv.last_paid_click_date <= l.created_at
-        and lv.visitor_id = l.visitor_id
-left join purchases as p
-    on lv.visitor_id = p.visitor_id
-    and l.lead_id = p.lead_id
-group by 1, 3, 4, 5, 6
-order by 9 desc nulls last, 1, 2 desc, 3, 4, 5;
+    visit_date,
+    visitors_count,
+    utm_source,
+    utm_medium,
+    utm_campaign,
+    total_cost,
+    leads_count,
+    purchases_count,
+    revenue
+from showcase;
+
+	

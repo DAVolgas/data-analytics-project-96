@@ -18,7 +18,7 @@ select
     l.amount,
     l.closing_reason,
     l.status_id
-from sessions as s 
+from sessions as s
 inner join last_paid_visits as lp
     on
         lp.visitor_id = s.visitor_id
