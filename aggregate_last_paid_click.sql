@@ -83,4 +83,3 @@ select
     purchases_count,
     revenue
 from showcase;
-
