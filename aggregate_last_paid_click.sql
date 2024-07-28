@@ -68,7 +68,7 @@ showcase as (
         on
             lv.visitor_id = p.visitor_id
             and l.lead_id = p.lead_id
-    group by 1, 3, 4, 5, 6
+    group by 1, 2, 3, 4, 5
     order by 9 desc nulls last, 1, 2 desc, 3, 4, 5
 )
 
