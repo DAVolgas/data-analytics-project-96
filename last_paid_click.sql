@@ -24,7 +24,8 @@ inner join last_paid_visits as lp
         lp.visitor_id = s.visitor_id
         and lp.last_paid_click_date = s.visit_date
 left join leads as l
-    on  s.visitor_id = l.visitor_id
+    on
+        s.visitor_id = l.visitor_id
         and l.created_at >= s.visit_date
 where s.medium != 'organic'
 order by 8 desc nulls last, 2, 3, 4, 5;
