@@ -26,7 +26,7 @@ GROUP BY 1;
 WITH last_paid_visits AS (
     SELECT
         visitor_id,
-        MAX(visit_date) as last_paid_click_date
+        max(visit_date) AS last_paid_click_date
     FROM sessions
     WHERE medium != 'organic'
     GROUP BY 1
@@ -34,31 +34,31 @@ WITH last_paid_visits AS (
 
 SELECT
     lp.visitor_id,
-    lp.last_paid_click_date as visit_date,
-    s."source" as utm_source,
-    s.medium as utm_medium,
-    s.campaign as utm_campaign,
+    lp.last_paid_click_date AS visit_date,
+    s."source" AS utm_source,
+    s.medium AS utm_medium,
+    s.campaign AS utm_campaign,
     l.lead_id,
     l.created_at,
+    l.created_at::DATE - visit_date::DATE as interval,
     l.amount,
     l.closing_reason,
     l.status_id
-FROM sessions as s
-INNER JOIN last_paid_visits as lp
+FROM sessions AS s
+INNER JOIN last_paid_visits AS lp
     ON
         s.visitor_id = lp.visitor_id
         AND s.visit_date = lp.last_paid_click_date
-LEFT JOIN leads as l
+LEFT JOIN leads AS l
     ON
         s.visitor_id = l.visitor_id
-        and s.visit_date <= l.created_at
+        AND s.visit_date <= l.created_at
 WHERE s.medium != 'organic'
 ORDER BY 8 DESC NULLS LAST, 2, 3, 4, 5;
 
 -- срок, через который закрывается 90% лидов
 -- запрос к витрине lpc
-SELECT
-    percentile_disc(0.9) WITHIN GROUP (ORDER BY interval) AS leads_close_interval
+SELECT percentile_disc(0.9) WITHIN GROUP (ORDER BY interval) AS leads_close_interval
 FROM show_case_lpc
 WHERE lead_id IS NOT NULL;
 
@@ -70,7 +70,7 @@ WITH vy_ads_cost AS (
         utm_source,
         utm_medium,
         utm_campaign,
-        sum(daily_spent) as total_cost
+        sum(daily_spent) AS total_cost
     FROM vk_ads
     GROUP BY 1, 2, 3, 4
 
@@ -81,7 +81,7 @@ WITH vy_ads_cost AS (
         utm_source,
         utm_medium,
         utm_campaign,
-        sum(daily_spent) as total_cost
+        sum(daily_spent) AS total_cost
     FROM ya_ads
     GROUP BY 1, 2, 3, 4
 ),
@@ -98,7 +98,7 @@ purchases AS (
 last_visit AS (
     SELECT
         visitor_id,
-        max(visit_date) as last_paid_click_date
+        max(visit_date) AS last_paid_click_date
     FROM sessions
     WHERE medium != 'organic'
     GROUP BY 1
@@ -106,7 +106,7 @@ last_visit AS (
 
 showcase AS (
     SELECT
-        lv.last_paid_click_date::date AS visit_date,
+        lv.last_paid_click_date::DATE AS visit_date,
         s.source AS utm_source,
         s.medium AS utm_medium,
         s.campaign AS utm_campaign,
@@ -154,9 +154,9 @@ FROM showcase;
 -- запрос к витрине aggregate lpc
 SELECT
     utm_source,
-    SUM(total_cost) AS total_cost,
-    SUM(revenue) AS revenue,
-    ROUND((SUM(revenue) - SUM(total_cost)) * 100.0 / SUM(total_cost), 2) AS roi
+    sum(total_cost) AS total_cost,
+    sum(revenue) AS revenue,
+    ROUND((sum(revenue) - sum(total_cost)) * 100.0 / sum(total_cost), 2) AS roi
 FROM showcase
 WHERE total_cost > 0
 GROUP BY 1
@@ -167,30 +167,30 @@ ORDER BY 2 DESC;
 SELECT
     visit_date::DATE,
     utm_source,
-    SUM(total_cost) AS total_cost,
-    COALESCE(SUM(revenue), 0) AS revenue,
-    SUM(visitors_count) AS visitors_count,
-    SUM(leads_count) AS leads_count,
-    SUM(purchases_count) AS purchases_count,
-    ROUND(SUM(total_cost) / SUM(visitors_count), 2) AS cpu,
+    sum(total_cost) AS total_cost,
+    COALESCE(sum(revenue), 0) AS revenue,
+    sum(visitors_count) AS visitors_count,
+    sum(leads_count) AS leads_count,
+    sum(purchases_count) AS purchases_count,
+    ROUND(sum(total_cost) / sum(visitors_count), 2) AS cpu,
     CASE
         WHEN
-            SUM(leads_count) > 0
-            THEN ROUND(SUM(total_cost) / SUM(leads_count), 2)
+            sum(leads_count) > 0
+            THEN ROUND(sum(total_cost) / sum(leads_count), 2)
     END AS cpl,
     CASE
         WHEN
-            SUM(purchases_count) > 0
-            THEN ROUND(SUM(total_cost) / SUM(purchases_count), 2)
+            sum(purchases_count) > 0
+            THEN ROUND(sum(total_cost) / sum(purchases_count), 2)
     END AS cppu,
     ROUND(
-        (COALESCE(SUM(revenue), 0) - SUM(total_cost)) * 100.0 / SUM(total_cost),
+        (COALESCE(sum(revenue), 0) - sum(total_cost)) * 100.0 / sum(total_cost),
         2
     ) AS roi,
     CASE
         WHEN
-            SUM(purchases_count) > 0
-            THEN ROUND(SUM(revenue) / SUM(purchases_count))
+            sum(purchases_count) > 0
+            THEN ROUND(sum(revenue) / sum(purchases_count))
     END AS avg_amount
 FROM showcase
 WHERE total_cost > 0
@@ -203,36 +203,36 @@ SELECT
     utm_source,
     utm_medium,
     utm_campaign,
-    SUM(total_cost) AS total_cost,
-    COALESCE(SUM(revenue), 0) AS revenue,
-    SUM(visitors_count) AS visitors_count,
-    ROUND((SUM(leads_count) / SUM(visitors_count) * 100.0), 2) AS conv_to_leads,
-    SUM(leads_count) AS leads_count,
+    sum(total_cost) AS total_cost,
+    COALESCE(sum(revenue), 0) AS revenue,
+    sum(visitors_count) AS visitors_count,
+    ROUND((sum(leads_count) / sum(visitors_count) * 100.0), 2) AS conv_to_leads,
+    sum(leads_count) AS leads_count,
     CASE
         WHEN
-            SUM(leads_count) > 0
-            THEN ROUND((SUM(purchases_count) / SUM(leads_count) * 100.0), 2)
+            sum(leads_count) > 0
+            THEN ROUND((sum(purchases_count) / sum(leads_count) * 100.0), 2)
     END AS conv_to_purchases,
-    SUM(purchases_count) AS purchases_count,
-    ROUND(SUM(total_cost) / SUM(visitors_count), 2) AS cpu,
+    sum(purchases_count) AS purchases_count,
+    ROUND(sum(total_cost) / sum(visitors_count), 2) AS cpu,
     CASE
         WHEN
-            SUM(leads_count) > 0
-            THEN ROUND(SUM(total_cost) / SUM(leads_count), 2)
+            sum(leads_count) > 0
+            THEN ROUND(sum(total_cost) / sum(leads_count), 2)
     END AS cpl,
     CASE
         WHEN
-            SUM(purchases_count) > 0
-            THEN ROUND(SUM(total_cost) / SUM(purchases_count), 2)
+            sum(purchases_count) > 0
+            THEN ROUND(sum(total_cost) / sum(purchases_count), 2)
     END AS cppu,
     ROUND(
-        (COALESCE(SUM(revenue), 0) - SUM(total_cost)) * 100.0 / SUM(total_cost),
+        (COALESCE(sum(revenue), 0) - sum(total_cost)) * 100.0 / sum(total_cost),
         2
     ) AS roi,
     CASE
         WHEN
-            SUM(purchases_count) > 0
-            THEN ROUND(SUM(revenue) / SUM(purchases_count))
+            sum(purchases_count) > 0
+            THEN ROUND(sum(revenue) / sum(purchases_count))
     END AS avg_amount
 FROM showcase
 WHERE total_cost > 0
@@ -243,25 +243,25 @@ ORDER BY 4 DESC;
 -- аналогичные запросы с фильтром по vk и yandex для этих источников
 -- запрос к витрине aggregate lpc 
 SELECT
-    sum(visitors_count),
+    sum(visitors_count) AS 'count',
     CASE WHEN sum(visitors_count) = sum(visitors_count) THEN 'clicks'
-    END AS groups
+    END AS 'groups'
 FROM showcase
 
 UNION
 
 SELECT
-    sum(leads_count),
+    sum(leads_count) AS 'count',
     CASE WHEN sum(leads_count) = sum(leads_count) THEN 'leads'
-    END AS groups
+    END AS 'groups'
 FROM showcase
 
 UNION
 
 SELECT
-    sum(purchases_count),
+    sum(purchases_count) AS 'count',
     CASE WHEN sum(purchases_count) = sum(purchases_count) THEN 'purchases'
-    END AS groups
+    END AS 'groups'
 FROM showcase
 ORDER BY 1 DESC;
 
@@ -278,11 +278,11 @@ WITH org_tab AS (
 
 SELECT
     s.visit_date::DATE,
-    count(s.medium) as not_organic_count,
-    ot.organic_count
+    ot.organic_count,
+    count(s.medium) AS not_organic_count
 FROM sessions AS s
 LEFT JOIN org_tab AS ot
     ON
-        s.visit_date::date = ot.visit_date::DATE
+        s.visit_date::DATE = ot.visit_date::DATE
 WHERE s.medium != 'organic'
 GROUP BY 1, 3;
