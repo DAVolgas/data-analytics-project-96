@@ -40,10 +40,10 @@ SELECT
     s.campaign AS utm_campaign,
     l.lead_id,
     l.created_at,
-    l.created_at::DATE - visit_date::DATE AS intervals,
     l.amount,
     l.closing_reason,
-    l.status_id
+    l.status_id,
+    l.created_at::DATE - visit_date::DATE AS intervals
 FROM sessions AS s
 INNER JOIN last_paid_visits AS lp
     ON
@@ -122,7 +122,7 @@ showcase AS (
         ON
             lv.visitor_id = s.visitor_id
             AND lv.last_paid_click_date = s.visit_date
-    lEFT JOIN vy_ads_cost AS vy
+    LEFT JOIN vy_ads_cost AS vy
         ON
             lv.last_paid_click_date::DATE = vy.campaign_date
             AND s.source = vy.utm_source
@@ -245,19 +245,19 @@ ORDER BY 4 DESC;
 -- аналогичные запросы с фильтром по vk и yandex для этих источников
 -- запрос к витрине aggregate lpc 
 SELECT
-    sum(visitors_count) AS count,
+    sum(visitors_count) AS counting,
     CASE WHEN sum(visitors_count) = sum(visitors_count) THEN 'clicks'
     END AS groups
 FROM showcase
 UNION
 SELECT
-    sum(leads_count) AS count,
+    sum(leads_count) AS counting,
     CASE WHEN sum(leads_count) = sum(leads_count) THEN 'leads'
     END AS groups
 FROM showcase
 UNION
 SELECT
-    sum(purchases_count) AS count,
+    sum(purchases_count) AS counting,
     CASE WHEN sum(purchases_count) = sum(purchases_count) THEN 'purchases'
     END AS groups
 FROM showcase
