@@ -157,7 +157,7 @@ SELECT
     utm_source,
     sum(total_cost) AS total_cost,
     sum(revenue) AS revenue,
-    ROUND((sum(revenue) - sum(total_cost)) * 100.0 / sum(total_cost), 2) AS roi
+    round((sum(revenue) - sum(total_cost)) * 100.0 / sum(total_cost), 2) AS roi
 FROM showcase
 WHERE total_cost > 0
 GROUP BY 1
@@ -169,29 +169,29 @@ SELECT
     visit_date::DATE,
     utm_source,
     sum(total_cost) AS total_cost,
-    COALESCE(sum(revenue), 0) AS revenue,
+    coalesce(sum(revenue), 0) AS revenue,
     sum(visitors_count) AS visitors_count,
     sum(leads_count) AS leads_count,
     sum(purchases_count) AS purchases_count,
-    ROUND(sum(total_cost) / sum(visitors_count), 2) AS cpu,
+    round(sum(total_cost) / sum(visitors_count), 2) AS cpu,
     CASE
         WHEN
             sum(leads_count) > 0
-            THEN ROUND(sum(total_cost) / sum(leads_count), 2)
+            THEN round(sum(total_cost) / sum(leads_count), 2)
     END AS cpl,
     CASE
         WHEN
             sum(purchases_count) > 0
-            THEN ROUND(sum(total_cost) / sum(purchases_count), 2)
+            THEN round(sum(total_cost) / sum(purchases_count), 2)
     END AS cppu,
-    ROUND(
+    round(
         (COALESCE(sum(revenue), 0) - sum(total_cost)) * 100.0 / sum(total_cost),
         2
     ) AS roi,
     CASE
         WHEN
             sum(purchases_count) > 0
-            THEN ROUND(sum(revenue) / sum(purchases_count))
+            THEN round(sum(revenue) / sum(purchases_count))
     END AS avg_amount
 FROM showcase
 WHERE total_cost > 0
@@ -207,33 +207,33 @@ SELECT
     sum(total_cost) AS total_cost,
     COALESCE(sum(revenue), 0) AS revenue,
     sum(visitors_count) AS visitors_count,
-    ROUND((sum(leads_count) / sum(visitors_count) * 100.0), 2) AS conv_to_leads,
+    round((sum(leads_count) / sum(visitors_count) * 100.0), 2) AS conv_to_leads,
     sum(leads_count) AS leads_count,
     CASE
         WHEN
             sum(leads_count) > 0
-            THEN ROUND((sum(purchases_count) / sum(leads_count) * 100.0), 2)
+            THEN round((sum(purchases_count) / sum(leads_count) * 100.0), 2)
     END AS conv_to_purchases,
     sum(purchases_count) AS purchases_count,
-    ROUND(sum(total_cost) / sum(visitors_count), 2) AS cpu,
+    round(sum(total_cost) / sum(visitors_count), 2) AS cpu,
     CASE
         WHEN
             sum(leads_count) > 0
-            THEN ROUND(sum(total_cost) / sum(leads_count), 2)
+            THEN round(sum(total_cost) / sum(leads_count), 2)
     END AS cpl,
     CASE
         WHEN
             sum(purchases_count) > 0
-            THEN ROUND(sum(total_cost) / sum(purchases_count), 2)
+            THEN round(sum(total_cost) / sum(purchases_count), 2)
     END AS cppu,
     ROUND(
-        (COALESCE(sum(revenue), 0) - sum(total_cost)) * 100.0 / sum(total_cost),
+        (coalesce(sum(revenue), 0) - sum(total_cost)) * 100.0 / sum(total_cost),
         2
     ) AS roi,
     CASE
         WHEN
             sum(purchases_count) > 0
-            THEN ROUND(sum(revenue) / sum(purchases_count))
+            THEN round(sum(revenue) / sum(purchases_count))
     END AS avg_amount
 FROM showcase
 WHERE total_cost > 0
@@ -244,23 +244,19 @@ ORDER BY 4 DESC;
 -- аналогичные запросы с фильтром по vk и yandex для этих источников
 -- запрос к витрине aggregate lpc 
 SELECT
-    sum(visitors_count) AS 'count',
+    sum(visitors_count) AS count,
     CASE WHEN sum(visitors_count) = sum(visitors_count) THEN 'clicks'
     END AS 'groups'
 FROM showcase
-
 UNION
-
 SELECT
-    sum(leads_count) AS 'count',
+    sum(leads_count) AS count,
     CASE WHEN sum(leads_count) = sum(leads_count) THEN 'leads'
     END AS 'groups'
 FROM showcase
-
 UNION
-
 SELECT
-    sum(purchases_count) AS 'count',
+    sum(purchases_count) AS count,
     CASE WHEN sum(purchases_count) = sum(purchases_count) THEN 'purchases'
     END AS 'groups'
 FROM showcase
