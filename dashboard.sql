@@ -247,19 +247,19 @@ ORDER BY 4 DESC;
 SELECT
     sum(visitors_count) AS counting,
     CASE WHEN sum(visitors_count) = sum(visitors_count) THEN 'clicks'
-    END AS groups
+    END AS group_names
 FROM showcase
 UNION
 SELECT
     sum(leads_count) AS counting,
     CASE WHEN sum(leads_count) = sum(leads_count) THEN 'leads'
-    END AS groups
+    END AS group_names
 FROM showcase
 UNION
 SELECT
     sum(purchases_count) AS counting,
     CASE WHEN sum(purchases_count) = sum(purchases_count) THEN 'purchases'
-    END AS groups
+    END AS group_names
 FROM showcase
 ORDER BY 1 DESC;
 
