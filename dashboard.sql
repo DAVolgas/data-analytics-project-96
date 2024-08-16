@@ -40,7 +40,7 @@ SELECT
     s.campaign AS utm_campaign,
     l.lead_id,
     l.created_at,
-    l.created_at::DATE - visit_date::DATE as interval,
+    l.created_at::DATE - visit_date::DATE AS 'interval',
     l.amount,
     l.closing_reason,
     l.status_id
@@ -58,7 +58,8 @@ ORDER BY 8 DESC NULLS LAST, 2, 3, 4, 5;
 
 -- срок, через который закрывается 90% лидов
 -- запрос к витрине lpc
-SELECT percentile_disc(0.9) WITHIN GROUP (ORDER BY interval) AS leads_close_interval
+SELECT percentile_disc(0.9) WITHIN GROUP
+(ORDER BY 'interval') AS leads_close_interval
 FROM show_case_lpc
 WHERE lead_id IS NOT NULL;
 
