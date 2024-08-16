@@ -1,14 +1,14 @@
 -- общее количество посетителей
 SELECT
     visit_date::DATE,
+    source,
+    medium,
+    campaign,
     CASE
         WHEN medium = 'organic' THEN 'organic'
         ELSE 'paid'
     END AS source_type,
-    source,
-    medium,
-    campaign,
-    count(DISTINCT visitor_id)
+    count(DISTINCT visitor_id) AS visitors_count
 FROM sessions
 GROUP BY 1, 2, 3, 4, 5
 ORDER BY 6 DESC;
@@ -16,23 +16,23 @@ ORDER BY 6 DESC;
 -- общее количество лидов
 SELECT
     created_at::DATE,
-    count(DISTINCT lead_id)
+    count(DISTINCT lead_id) AS leads_count
 FROM leads
 GROUP BY 1;
 
 -- LPC использована в следующих графиках:
 -- количество лидов по LPC, количество лидов по платным каналам,
 -- количество посетителей по платным каналам, ТОП-10 по посетителям
-with last_paid_visits as (
-    select
+WITH last_paid_visits AS (
+    SELECT
         visitor_id,
         MAX(visit_date) as last_paid_click_date
-    from sessions
-    where medium != 'organic'
-    group by 1
+    FROM sessions
+    WHERE medium != 'organic'
+    GROUP BY 1
 )
 
-select
+SELECT
     lp.visitor_id,
     lp.last_paid_click_date as visit_date,
     s."source" as utm_source,
@@ -43,102 +43,102 @@ select
     l.amount,
     l.closing_reason,
     l.status_id
-from sessions as s
-inner join last_paid_visits as lp
-    on
+FROM sessions as s
+INNER JOIN last_paid_visits as lp
+    ON
         s.visitor_id = lp.visitor_id
-        and s.visit_date = lp.last_paid_click_date
-left join leads as l
-    on
+        AND s.visit_date = lp.last_paid_click_date
+LEFT JOIN leads as l
+    ON
         s.visitor_id = l.visitor_id
         and s.visit_date <= l.created_at
-where s.medium != 'organic'
-order by 8 desc nulls last, 2, 3, 4, 5;
+WHERE s.medium != 'organic'
+ORDER BY 8 DESC NULLS LAST, 2, 3, 4, 5;
 
 -- срок, через который закрывается 90% лидов
 -- запрос к витрине lpc
-select 
-	percentile_disc(0.9) within group (order by interval) as leads_close_interval
-from show_case_lpc
-where lead_id is not NULL;
+SELECT
+    percentile_disc(0.9) WITHIN GROUP (ORDER BY interval) AS leads_close_interval
+FROM show_case_lpc
+WHERE lead_id IS NOT NULL;
 
 -- aggregate LPC использована в следущих графиках:
 -- затраты на рекламу по платным кампаниям и по vk/yandex
-with vy_ads_cost as (
-    select
+WITH vy_ads_cost AS (
+    SELECT
         campaign_date,
         utm_source,
         utm_medium,
         utm_campaign,
         sum(daily_spent) as total_cost
-    from vk_ads
-    group by 1, 2, 3, 4
+    FROM vk_ads
+    GROUP BY 1, 2, 3, 4
 
-    union
+    UNION
 
-    select
+    SELECT
         campaign_date,
         utm_source,
         utm_medium,
         utm_campaign,
         sum(daily_spent) as total_cost
-    from ya_ads
-    group by 1, 2, 3, 4
+    FROM ya_ads
+    GROUP BY 1, 2, 3, 4
 ),
 
-purchases as (
-    select
+purchases AS (
+    SELECT
         visitor_id,
         lead_id,
         amount
-    from leads
-    where status_id = 142
+    FROM leads
+    WHERE status_id = 142
 ),
 
-last_visit as (
-    select
+last_visit AS (
+    SELECT
         visitor_id,
         max(visit_date) as last_paid_click_date
-    from sessions
-    where medium != 'organic'
-    group by 1
+    FROM sessions
+    WHERE medium != 'organic'
+    GROUP BY 1
 ),
 
-showcase as (
-    select
-        lv.last_paid_click_date::date as visit_date,
-        s.source as utm_source,
-        s.medium as utm_medium,
-        s.campaign as utm_campaign,
+showcase AS (
+    SELECT
+        lv.last_paid_click_date::date AS visit_date,
+        s.source AS utm_source,
+        s.medium AS utm_medium,
+        s.campaign AS utm_campaign,
         vy.total_cost,
-        count(distinct s.visitor_id) as visitors_count,
-        count(distinct l.lead_id) as leads_count,
-        count(p.lead_id) as purchases_count,
-        sum(p.amount) as revenue
-    from last_visit as lv
-    inner join sessions as s
-        on
+        count(DISTINCT s.visitor_id) AS visitors_count,
+        count(DISTINCT l.lead_id) AS leads_count,
+        count(p.lead_id) AS purchases_count,
+        sum(p.amount) AS revenue
+    FROM last_visit AS lv
+    INNER JOIN sessions AS s
+        ON
             lv.visitor_id = s.visitor_id
-            and lv.last_paid_click_date = s.visit_date
-    left join vy_ads_cost as vy
-        on
-            lv.last_paid_click_date::date = vy.campaign_date
-            and s.source = vy.utm_source
-            and s.medium = vy.utm_medium
-            and s.campaign = vy.utm_campaign
-    left join leads as l
-        on
+            AND lv.last_paid_click_date = s.visit_date
+    lEFT JOIN vy_ads_cost AS vy
+        ON
+            lv.last_paid_click_date::DATE = vy.campaign_date
+            AND s.source = vy.utm_source
+            AND s.medium = vy.utm_medium
+            AND s.campaign = vy.utm_campaign
+    LEFT JOIN leads AS l
+        ON
             lv.last_paid_click_date <= l.created_at
-            and lv.visitor_id = l.visitor_id
-    left join purchases as p
-        on
+            AND lv.visitor_id = l.visitor_id
+    LEFT JOIN purchases AS p
+        ON
             lv.visitor_id = p.visitor_id
-            and l.lead_id = p.lead_id
-    group by 1, 2, 3, 4, 5
-    order by 9 desc nulls last, 1, 2 desc, 3, 4, 5
+            AND l.lead_id = p.lead_id
+    GROUP BY 1, 2, 3, 4, 5
+    ORDER BY 9 DESC NULLS LAST, 1, 2 DESC, 3, 4, 5
 )
 
-select
+SELECT
     visit_date,
     visitors_count,
     utm_source,
@@ -148,7 +148,7 @@ select
     leads_count,
     purchases_count,
     revenue
-from showcase;
+FROM showcase;
 
 -- для общего графика по окупаемости рекламы
 -- запрос к витрине aggregate lpc
@@ -242,47 +242,47 @@ ORDER BY 4 DESC;
 -- конверсия клик-лид-покупка
 -- аналогичные запросы с фильтром по vk и yandex для этих источников
 -- запрос к витрине aggregate lpc 
-select
+SELECT
     sum(visitors_count),
-    case when sum(visitors_count) = sum(visitors_count) then 'clicks'
-    end as groups
-from showcase
+    CASE WHEN sum(visitors_count) = sum(visitors_count) THEN 'clicks'
+    END AS groups
+FROM showcase
 
-union
+UNION
 
-select
+SELECT
     sum(leads_count),
-    case when sum(leads_count) = sum(leads_count) then 'leads'
-    end as groups
-from showcase
+    CASE WHEN sum(leads_count) = sum(leads_count) THEN 'leads'
+    END AS groups
+FROM showcase
 
-union
+UNION
 
-select
+SELECT
     sum(purchases_count),
-    case when sum(purchases_count) = sum(purchases_count) then 'purchases'
-    end as groups
-from showcase
-order by 1 DESC;
+    CASE WHEN sum(purchases_count) = sum(purchases_count) THEN 'purchases'
+    END AS groups
+FROM showcase
+ORDER BY 1 DESC;
 
 -- количество посещений по органике и неорганике
 -- для определения их корреляции в google sheets
-with org_tab as (
-    select
-        visit_date::date,
-        count(medium) as organic_count
-    from sessions
-    where medium = 'organic'
-    group by 1
+WITH org_tab AS (
+    SELECT
+        visit_date::DATE,
+        count(medium) AS organic_count
+    FROM sessions
+    WHERE medium = 'organic'
+    GROUP BY 1
 )
 
-select
-    s.visit_date::date,
+SELECT
+    s.visit_date::DATE,
     count(s.medium) as not_organic_count,
     ot.organic_count
-from sessions as s
-left join org_tab as ot
-    on
-        s.visit_date::date = ot.visit_date::date
-where s.medium != 'organic'
-group by 1, 3;
+FROM sessions AS s
+LEFT JOIN org_tab AS ot
+    ON
+        s.visit_date::date = ot.visit_date::DATE
+WHERE s.medium != 'organic'
+GROUP BY 1, 3;
