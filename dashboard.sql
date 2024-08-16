@@ -40,7 +40,7 @@ SELECT
     s.campaign AS utm_campaign,
     l.lead_id,
     l.created_at,
-    l.created_at::DATE - visit_date::DATE AS 'interval',
+    l.created_at::DATE - visit_date::DATE AS intervals,
     l.amount,
     l.closing_reason,
     l.status_id
@@ -58,8 +58,9 @@ ORDER BY 8 DESC NULLS LAST, 2, 3, 4, 5;
 
 -- срок, через который закрывается 90% лидов
 -- запрос к витрине lpc
-SELECT percentile_disc(0.9) WITHIN GROUP
-(ORDER BY 'interval') AS leads_close_interval
+SELECT
+    percentile_disc(0.9) WITHIN GROUP
+    (ORDER BY intervals) AS leads_close_interval
 FROM show_case_lpc
 WHERE lead_id IS NOT NULL;
 
@@ -185,7 +186,7 @@ SELECT
             THEN round(sum(total_cost) / sum(purchases_count), 2)
     END AS cppu,
     round(
-        (COALESCE(sum(revenue), 0) - sum(total_cost)) * 100.0 / sum(total_cost),
+        (coalesce(sum(revenue), 0) - sum(total_cost)) * 100.0 / sum(total_cost),
         2
     ) AS roi,
     CASE
@@ -205,7 +206,7 @@ SELECT
     utm_medium,
     utm_campaign,
     sum(total_cost) AS total_cost,
-    COALESCE(sum(revenue), 0) AS revenue,
+    coalesce(sum(revenue), 0) AS revenue,
     sum(visitors_count) AS visitors_count,
     round((sum(leads_count) / sum(visitors_count) * 100.0), 2) AS conv_to_leads,
     sum(leads_count) AS leads_count,
@@ -226,7 +227,7 @@ SELECT
             sum(purchases_count) > 0
             THEN round(sum(total_cost) / sum(purchases_count), 2)
     END AS cppu,
-    ROUND(
+    round(
         (coalesce(sum(revenue), 0) - sum(total_cost)) * 100.0 / sum(total_cost),
         2
     ) AS roi,
@@ -246,19 +247,19 @@ ORDER BY 4 DESC;
 SELECT
     sum(visitors_count) AS count,
     CASE WHEN sum(visitors_count) = sum(visitors_count) THEN 'clicks'
-    END AS 'groups'
+    END AS groups
 FROM showcase
 UNION
 SELECT
     sum(leads_count) AS count,
     CASE WHEN sum(leads_count) = sum(leads_count) THEN 'leads'
-    END AS 'groups'
+    END AS groups
 FROM showcase
 UNION
 SELECT
     sum(purchases_count) AS count,
     CASE WHEN sum(purchases_count) = sum(purchases_count) THEN 'purchases'
-    END AS 'groups'
+    END AS groups
 FROM showcase
 ORDER BY 1 DESC;
 
