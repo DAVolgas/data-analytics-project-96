@@ -134,7 +134,7 @@ total_cost AS (
 last_visit AS (
     SELECT
         visitor_id,
-        max(visit_date) as last_paid_click_date
+        max(visit_date) AS last_paid_click_date
     FROM sessions
     WHERE medium != 'organic'
     GROUP BY 1
@@ -146,8 +146,8 @@ total_amount AS (
         s.source AS utm_source,
         s.medium AS utm_medium,
         s.campaign AS utm_campaign,
-        count(distinct s.visitor_id) AS visitors_count,
-        count(distinct l.lead_id) AS leads_count,
+        count(DISTINCT s.visitor_id) AS visitors_count,
+        count(DISTINCT l.lead_id) AS leads_count,
         count(CASE
             WHEN l.status_id = 142 THEN 1
         END)
@@ -219,7 +219,7 @@ total_cost AS (
 last_visit AS (
     SELECT
         visitor_id,
-        max(visit_date) as last_paid_click_date
+        max(visit_date) AS last_paid_click_date
     FROM sessions
     WHERE medium != 'organic'
     GROUP BY 1
@@ -231,8 +231,8 @@ total_amount AS (
         s.source AS utm_source,
         s.medium AS utm_medium,
         s.campaign AS utm_campaign,
-        count(distinct s.visitor_id) AS visitors_count,
-        count(distinct l.lead_id) AS leads_count,
+        count(DISTINCT s.visitor_id) AS visitors_count,
+        count(DISTINCT l.lead_id) AS leads_count,
         count(CASE
             WHEN l.status_id = 142 THEN 1
         END)
@@ -249,25 +249,26 @@ total_amount AS (
             AND lv.visitor_id = l.visitor_id
     GROUP BY 1, 2, 3, 4
 ),
+
 showcase AS (
-SELECT
-    ta.visit_date,
-    ta.visitors_count,
-    ta.utm_source,
-    ta.utm_medium,
-    ta.utm_campaign,
-    tc.total_cost,
-    ta.leads_count,
-    ta.purchases_count,
-    ta.revenue
-FROM total_amount AS ta
-LEFT JOIN total_cost AS tc
-    ON
-        ta.visit_date = tc.campaign_date
-        AND ta.utm_source = tc.utm_source
-        AND ta.utm_medium = tc.utm_medium
-        AND ta.utm_campaign = tc.utm_campaign
-ORDER BY 9 DESC NULLS LAST, 1, 2 DESC, 3, 4, 5
+    SELECT
+        ta.visit_date,
+        ta.visitors_count,
+        ta.utm_source,
+        ta.utm_medium,
+        ta.utm_campaign,
+        tc.total_cost,
+        ta.leads_count,
+        ta.purchases_count,
+        ta.revenue
+    FROM total_amount AS ta
+    LEFT JOIN total_cost AS tc
+        ON
+            ta.visit_date = tc.campaign_date
+            AND ta.utm_source = tc.utm_source
+            AND ta.utm_medium = tc.utm_medium
+            AND ta.utm_campaign = tc.utm_campaign
+    ORDER BY 9 DESC NULLS LAST, 1, 2 DESC, 3, 4, 5
 )
 
 SELECT
@@ -346,7 +347,7 @@ total_cost AS (
 last_visit AS (
     SELECT
         visitor_id,
-        max(visit_date) as last_paid_click_date
+        max(visit_date) AS last_paid_click_date
     FROM sessions
     WHERE medium != 'organic'
     GROUP BY 1
@@ -358,8 +359,8 @@ total_amount AS (
         s.source AS utm_source,
         s.medium AS utm_medium,
         s.campaign AS utm_campaign,
-        count(distinct s.visitor_id) AS visitors_count,
-        count(distinct l.lead_id) AS leads_count,
+        count(DISTINCT s.visitor_id) AS visitors_count,
+        count(DISTINCT l.lead_id) AS leads_count,
         count(CASE
             WHEN l.status_id = 142 THEN 1
         END)
@@ -376,25 +377,26 @@ total_amount AS (
             AND lv.visitor_id = l.visitor_id
     GROUP BY 1, 2, 3, 4
 ),
+
 showcase AS (
-SELECT
-    ta.visit_date,
-    ta.visitors_count,
-    ta.utm_source,
-    ta.utm_medium,
-    ta.utm_campaign,
-    tc.total_cost,
-    ta.leads_count,
-    ta.purchases_count,
-    ta.revenue
-FROM total_amount AS ta
-LEFT JOIN total_cost AS tc
-    ON
-        ta.visit_date = tc.campaign_date
-        AND ta.utm_source = tc.utm_source
-        AND ta.utm_medium = tc.utm_medium
-        AND ta.utm_campaign = tc.utm_campaign
-ORDER BY 9 DESC NULLS LAST, 1, 2 DESC, 3, 4, 5
+    SELECT
+        ta.visit_date,
+        ta.visitors_count,
+        ta.utm_source,
+        ta.utm_medium,
+        ta.utm_campaign,
+        tc.total_cost,
+        ta.leads_count,
+        ta.purchases_count,
+        ta.revenue
+    FROM total_amount AS ta
+    LEFT JOIN total_cost AS tc
+        ON
+            ta.visit_date = tc.campaign_date
+            AND ta.utm_source = tc.utm_source
+            AND ta.utm_medium = tc.utm_medium
+            AND ta.utm_campaign = tc.utm_campaign
+    ORDER BY 9 DESC NULLS LAST, 1, 2 DESC, 3, 4, 5
 )
 
 SELECT
