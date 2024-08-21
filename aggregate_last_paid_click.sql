@@ -1,11 +1,12 @@
-with vy_ads_cost as (
+with total_cost as (
     select
         campaign_date,
         utm_source,
         utm_medium,
         utm_campaign,
-        daily_spent
+        sum(daily_spent) as total_cost
     from vk_ads
+    group by 1, 2, 3, 4
 
     union
 
@@ -14,18 +15,8 @@ with vy_ads_cost as (
         utm_source,
         utm_medium,
         utm_campaign,
-        daily_spent
-    from ya_ads
-),
-
-total_cost as (
-    select
-        campaign_date,
-        utm_source,
-        utm_medium,
-        utm_campaign,
         sum(daily_spent) as total_cost
-    from vy_ads_cost
+    from ya_ads
     group by 1, 2, 3, 4
 ),
 
@@ -80,4 +71,4 @@ left join total_cost as tc
         and ta.utm_source = tc.utm_source
         and ta.utm_medium = tc.utm_medium
         and ta.utm_campaign = tc.utm_campaign
-order by 9 desc nulls last, 1, 2 desc, 3, 4, 5
+order by 9 desc nulls last, 1, 2 desc, 3, 4, 5;

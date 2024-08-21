@@ -100,14 +100,15 @@ WHERE lead_id IS NOT NULL;
 
 -- aggregate LPC использована в следущих графиках:
 -- затраты на рекламу по платным кампаниям и по vk/yandex
-WITH vy_ads_cost AS (
+WITH total_cost AS (
     SELECT
         campaign_date,
         utm_source,
         utm_medium,
         utm_campaign,
-        daily_spent
+        sum(daily_spent) AS total_cost
     FROM vk_ads
+    GROUP BY 1, 2, 3, 4
 
     UNION
 
@@ -116,18 +117,8 @@ WITH vy_ads_cost AS (
         utm_source,
         utm_medium,
         utm_campaign,
-        daily_spent
-    FROM ya_ads
-),
-
-total_cost AS (
-    SELECT
-        campaign_date,
-        utm_source,
-        utm_medium,
-        utm_campaign,
         sum(daily_spent) AS total_cost
-    FROM vy_ads_cost
+    FROM ya_ads
     GROUP BY 1, 2, 3, 4
 ),
 
@@ -185,14 +176,15 @@ LEFT JOIN total_cost AS tc
 ORDER BY 9 DESC NULLS LAST, 1, 2 DESC, 3, 4, 5;
 
 -- для итоговых метрик и общего графика по окупаемости рекламы
-WITH vy_ads_cost AS (
+WITH total_cost AS (
     SELECT
         campaign_date,
         utm_source,
         utm_medium,
         utm_campaign,
-        daily_spent
+        sum(daily_spent) AS total_cost
     FROM vk_ads
+    GROUP BY 1, 2, 3, 4
 
     UNION
 
@@ -201,18 +193,8 @@ WITH vy_ads_cost AS (
         utm_source,
         utm_medium,
         utm_campaign,
-        daily_spent
-    FROM ya_ads
-),
-
-total_cost AS (
-    SELECT
-        campaign_date,
-        utm_source,
-        utm_medium,
-        utm_campaign,
         sum(daily_spent) AS total_cost
-    FROM vy_ads_cost
+    FROM ya_ads
     GROUP BY 1, 2, 3, 4
 ),
 
@@ -313,14 +295,15 @@ ORDER BY 4 DESC;
 
 -- конверсия клик-лид-покупка
 -- аналогичные запросы с фильтром по vk и yandex для этих источников
-WITH vy_ads_cost AS (
+WITH total_cost AS (
     SELECT
         campaign_date,
         utm_source,
         utm_medium,
         utm_campaign,
-        daily_spent
+        sum(daily_spent) AS total_cost
     FROM vk_ads
+    GROUP BY 1, 2, 3, 4
 
     UNION
 
@@ -329,18 +312,8 @@ WITH vy_ads_cost AS (
         utm_source,
         utm_medium,
         utm_campaign,
-        daily_spent
-    FROM ya_ads
-),
-
-total_cost AS (
-    SELECT
-        campaign_date,
-        utm_source,
-        utm_medium,
-        utm_campaign,
         sum(daily_spent) AS total_cost
-    FROM vy_ads_cost
+    FROM ya_ads
     GROUP BY 1, 2, 3, 4
 ),
 
